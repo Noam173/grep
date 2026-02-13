@@ -1,49 +1,45 @@
-use std::env::args;
-use std::io::{IsTerminal, stdin};
-use std::process::exit;
+use clap::Parser;
+use std::{
+    io::{IsTerminal, stdin},
+    process::exit,
+};
+#[derive(Parser)]
+struct Args {
+    #[arg(short, long, default_value_t = false)]
+    insensitive: bool,
+    #[arg(short = 'v', long, default_value_t = false)]
+    exclude: bool,
+    #[arg(short, long, default_value_t = false)]
+    count: bool,
+    query: String,
+}
+
 fn main() {
     if stdin().is_terminal() {
-        eprintln!("didnt get any input...");
+        eprint!("didnt recive any file as output... \n");
         exit(1);
     }
-    let (params, query) = get_env();
-    grep(params, query);
-}
-fn get_env() -> (Vec<String>, String) {
-    let mut envs: Vec<String> = args().collect();
-    let mut query = String::new();
-    let mut params: Vec<String> = Vec::new();
-    envs.remove(0);
-    for i in envs {
-        match i {
-            n if n.contains("-") => params.push(n),
-            _ => query += &i,
-        }
-    }
-    (params, query)
-}
-fn grep(params: Vec<String>, query: String) -> Option<String> {
     let mut matched: Vec<String> = Vec::new();
+    let args = Args::parse();
     for line in stdin().lines() {
-        let line = line.ok()?;
-        let mut idk: bool = if params.contains(&"-i".to_string()) {
-            line.to_lowercase().contains(&query.to_lowercase())
+        let line = line.unwrap_or("couldnt read file".to_string());
+        let mut i: bool = if args.insensitive {
+            line.to_lowercase().contains(&args.query.to_lowercase())
         } else {
-            line.contains(&query)
+            line.contains(&args.query)
         };
-        if params.contains(&"-v".to_string()) {
-            idk = !idk;
+        if args.exclude {
+            i = !i;
         }
-        if idk {
+        if i {
             matched.push(line);
         }
     }
-    if !params.contains(&"-c".to_string()) {
-        for i in matched {
-            println!("{i}");
-        }
-    } else {
+    if args.count {
         println!("{}", matched.len());
+    } else {
+        for i in matched {
+            println!("{}", i);
+        }
     }
-    None
 }
