@@ -15,12 +15,12 @@ struct Args {
 }
 
 fn main() {
-    if stdin().is_terminal() {
+    let args = Args::parse();
+    if stdin().is_terminal() && args.query.is_empty() {
         eprint!("didnt recive any file as output... \n");
         exit(1);
     }
     let mut matched: Vec<String> = Vec::new();
-    let args = Args::parse();
     for line in stdin().lines() {
         let line = line.unwrap_or("couldnt read file".to_string());
         let mut i: bool = if args.insensitive {
