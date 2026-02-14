@@ -1,8 +1,5 @@
 use clap::Parser;
-use std::{
-    io::{IsTerminal, stdin},
-    process::exit,
-};
+use std::io::stdin;
 #[derive(Parser)]
 struct Args {
     #[arg(short, long, default_value_t = false)]
@@ -16,10 +13,6 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    if stdin().is_terminal() && args.query.is_empty() {
-        eprint!("didnt recive any file as output... \n");
-        exit(1);
-    }
     let mut matched: Vec<String> = Vec::new();
     for line in stdin().lines() {
         let line = line.unwrap_or("couldnt read file".to_string());
