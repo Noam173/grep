@@ -1,23 +1,29 @@
 use clap::Parser;
-use std::io::stdin;
+use std::io::{Result, stdin};
 #[derive(Parser)]
 struct Args {
-    #[arg(short, long, default_value_t = false)]
+    #[arg(short, long)]
     insensitive: bool,
-    #[arg(short = 'v', long, default_value_t = false)]
+    #[arg(short = 'v', long)]
     exclude: bool,
-    #[arg(short, long, default_value_t = false)]
+    #[arg(short, long)]
     count: bool,
     query: String,
 }
 
-fn main() {
+fn main() -> Result<()> {
     let args = Args::parse();
+    grep(args)
+}
+fn grep(args: Args) -> Result<()> {
+    let lines = stdin().lines();
     let mut matched: Vec<String> = Vec::new();
-    for line in stdin().lines() {
-        let line = line.unwrap_or("couldnt read file".to_string());
+    let l_query = args.query.to_lowercase();
+
+    for line in lines {
+        let line = line?;
         let mut i: bool = if args.insensitive {
-            line.to_lowercase().contains(&args.query.to_lowercase())
+            line.to_lowercase().contains(&l_query)
         } else {
             line.contains(&args.query)
         };
@@ -28,6 +34,7 @@ fn main() {
             matched.push(line);
         }
     }
+
     if args.count {
         println!("{}", matched.len());
     } else {
@@ -35,4 +42,5 @@ fn main() {
             println!("{}", i);
         }
     }
+    Ok(())
 }
