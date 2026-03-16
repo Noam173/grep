@@ -1,6 +1,7 @@
 use clap::Parser;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Result, stdin};
+use std::io::{BufRead, BufReader, IsTerminal, Result, stdin};
+use std::process::exit;
 
 #[derive(Parser)]
 struct Args {
@@ -19,17 +20,23 @@ struct Args {
 
 fn main() -> Result<()> {
     let args = Args::parse();
-
-    if args.files.is_empty() {
-        let reader = stdin();
-        process(reader.lock(), &args)?;
-    } else {
-        for file in &args.files {
-            let reader = BufReader::new(File::open(file)?);
-            process(reader, &args)?;
+    match args.files.is_empty() && stdin().is_terminal() {
+        true => {
+            eprintln!("didnt recive any input");
+            exit(1);
+        }
+        false => {
+            if args.files.is_empty() {
+                let reader = stdin();
+                process(reader.lock(), &args)?;
+            } else {
+                for file in &args.files {
+                    let reader = BufReader::new(File::open(file)?);
+                    process(reader, &args)?;
+                }
+            }
         }
     }
-
     Ok(())
 }
 
