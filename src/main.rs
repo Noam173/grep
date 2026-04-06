@@ -28,50 +28,53 @@ fn main() -> Result<()> {
         false => {
             if args.files.is_empty() {
                 let reader = stdin();
-                process(reader.lock(), &args)?;
+                grep(reader.lock(), &args);
             } else {
                 for file in &args.files {
                     let reader = BufReader::new(File::open(file)?);
-                    process(reader, &args)?;
+                    grep(reader, &args);
                 }
             }
         }
     }
     Ok(())
 }
-
-fn process<R: BufRead>(reader: R, args: &Args) -> Result<()> {
+fn grep<R: BufRead>(reader: R, args: &Args) {
     let query = if args.insensitive {
         args.query.to_lowercase()
     } else {
         args.query.clone()
     };
-
-    let mut count: u16 = 0;
-
-    for line in reader.lines() {
-        let line = line?;
-
-        let matched = if args.insensitive {
-            line.to_lowercase().contains(&query)
-        } else {
-            line.contains(&query)
-        };
-
-        let matched = if args.exclude { !matched } else { matched };
-
-        if matched {
-            if !args.count {
-                println!("{}", line);
-            } else {
-                count += 1;
-            }
-        }
+    let mut count: usize = 0;
+    let reader = reader.lines().map_while(Result::ok);
+    if args.insensitive {
+        reader
+            .filter(|line| {
+                let matched = line.to_lowercase().contains(&query);
+                if args.exclude { !matched } else { matched }
+            })
+            .for_each(|line| {
+                if !args.count {
+                    println!("{}", line)
+                } else {
+                    count += 1
+                }
+            });
+    } else {
+        reader
+            .filter(|line| {
+                let matched = line.contains(&query);
+                if args.exclude { !matched } else { matched }
+            })
+            .for_each(|line| {
+                if !args.count {
+                    println!("{}", line)
+                } else {
+                    count += 1
+                }
+            });
     }
-
     if args.count {
-        println!("{}", count);
-    }
-
-    Ok(())
+        println!("{}", count)
+    };
 }
