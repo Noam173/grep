@@ -4,4 +4,16 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow = "1.0.102"
 clap = { version = "4.5.58", features = ["derive"] }
+criterion = "0.8.2"
+
+[[bench]]
+name = "grep_bench"
+harness = false
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
