@@ -1,5 +1,7 @@
 use grep::check;
-
-fn main() {
-    check().unwrap();
+use std::io::Result;
+fn main() -> Result<()> {
+    check()?;
+    Ok(())
 }
+

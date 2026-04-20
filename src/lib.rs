@@ -1,8 +1,8 @@
 use clap::Parser;
 use std::fs::File;
 use std::io::BufReader;
+use std::io::{stdin, IsTerminal};
 use std::io::{BufRead, Result};
-use std::io::{IsTerminal, stdin};
 use std::process::exit;
 
 #[derive(Parser)]
@@ -40,18 +40,18 @@ pub fn check() -> Result<()> {
         false => {
             if args.files.is_empty() {
                 let reader = stdin();
-                grep(reader.lock(), &args);
+                run(reader.lock(), &args);
             } else {
                 for file in &args.files {
                     let reader = BufReader::new(File::open(file)?);
-                    grep(reader, &args);
+                    run(reader, &args);
                 }
             }
         }
     }
     Ok(())
 }
-pub fn grep<R: BufRead>(reader: R, args: &Args) {
+pub fn run<R: BufRead>(reader: R, args: &Args) {
     let query = if args.insensitive {
         args.query.to_lowercase()
     } else {
@@ -64,7 +64,11 @@ pub fn grep<R: BufRead>(reader: R, args: &Args) {
         } else {
             f.contains(&query)
         };
-        if args.exclude { !matched } else { matched }
+        if args.exclude {
+            !matched
+        } else {
+            matched
+        }
     });
     if !args.count {
         n.for_each(|line| println!("{}", line));
